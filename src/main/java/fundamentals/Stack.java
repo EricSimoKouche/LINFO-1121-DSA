@@ -12,7 +12,7 @@ import java.util.EmptyStackException;
 public interface Stack<E> {
 
     /**
-     * Checks if the queue is empty.
+     * Checks if the stack is empty.
      *
      * @return true if the queue contains no elements, false otherwise
      */
