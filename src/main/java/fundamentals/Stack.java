@@ -14,7 +14,7 @@ public interface Stack<E> {
     /**
      * Checks if the queue is empty.
      *
-     * @return true if the queue contains no elements, false otherwise
+     * @return true if the stack contains no elements, false otherwise
      */
     public boolean empty();
 
@@ -43,7 +43,7 @@ public interface Stack<E> {
 
 /**
  * Implement the Stack interface above using a simple linked list.
- * You should have at least one constructor withtout argument.
+ * You should have at least one constructor without argument.
  * You are not allowed to use classes from java.util
  * @param <E>
  */
