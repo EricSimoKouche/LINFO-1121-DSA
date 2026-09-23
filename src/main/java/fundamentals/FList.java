@@ -46,7 +46,7 @@ public abstract class FList<A> implements Iterable<A> {
         return this instanceof Cons;
     }
 
-    // return true if the list is empty (Nill), false otherwise
+    // return true if the list is empty (Nil), false otherwise
     public final boolean isEmpty() {
         return this instanceof Nil;
     }
@@ -54,7 +54,10 @@ public abstract class FList<A> implements Iterable<A> {
     // return the length of the list
     public final int length() {
         // TODO
-         return -1;
+        if (this.isEmpty())
+            return 0;
+        else
+            return 1 + this.tail().length();
     }
 
     // return the head element of the list
@@ -76,15 +79,30 @@ public abstract class FList<A> implements Iterable<A> {
     // return a list on which each element has been applied function f
     public final <B> FList<B> map(Function<A,B> f) {
         // TODO
-         return null;
+        if (this.isEmpty())
+            return (Nil<B>) Nil.INSTANCE;
+        else {
+            A element = this.head();
+            FList<A> tail = this.tail();
+            return new Cons<B>(f.apply(element), tail.map(f));
+        }
     }
 
     // return a list on which only the elements that satisfies predicate are kept
     public final FList<A> filter(Predicate<A> f) {
         // TODO
-         return null;
+        if (this.isEmpty())
+            return (Nil<A>) Nil.INSTANCE ;
+        else {
+            A element = this.head();
+            FList<A> tail = this.tail();
+            if (f.test(element)) {
+                return new Cons<A>(element, tail.filter(f));
+            } else {
+                return tail.filter(f);
+            }
+        }
     }
-
 
     // return an iterator on the element of the list
     public Iterator<A> iterator() {
@@ -95,12 +113,16 @@ public abstract class FList<A> implements Iterable<A> {
 
             public boolean hasNext() {
                 // TODO
-                 return false;
+                 return current.isNotEmpty();
             }
 
             public A next() {
                 // TODO
-                 return null;
+                if (!hasNext())
+                    throw new IllegalArgumentException();
+                A nextElement = current.head();
+                current = current.tail();
+                return nextElement;
             }
 
             public void remove() {
@@ -109,43 +131,44 @@ public abstract class FList<A> implements Iterable<A> {
         };
     }
 
-
     private static final class Nil<A> extends FList<A> {
-        public static final Nil<Object> INSTANCE = new Nil();
+        public static final Nil<Object> INSTANCE = new Nil<>();
 
         @Override
         public A head() {
             // TODO
-             return null;
+             throw new IllegalArgumentException();
         }
 
         @Override
         public FList<A> tail() {
             // TODO
-             return null;
+             throw new NoSuchElementException();
         }
     }
 
     private static final class Cons<A> extends FList<A> {
 
         // TODO add instance variables
-
+        private A head;
+        private FList<A> tail;
 
         Cons(A a, FList<A> tail) {
+            this.head = a;
+            this.tail = tail;
         }
 
         @Override
         public A head() {
             // TODO
-             return null;
+             return this.head;
         }
 
         @Override
         public FList<A> tail() {
             // TODO
-             return null;
+             return this.tail;
         }
     }
-
 
 }

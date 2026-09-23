@@ -63,27 +63,41 @@ class LinkedStack<E> implements Stack<E> {
         }
     }
 
+    public LinkedStack () {
+        this.top = null;
+        this.size = 0;
+    }
+
     @Override
     public boolean empty() {
         // TODO Implement empty method
-         return false;
+         return this.size == 0;
     }
 
     @Override
     public E peek() throws EmptyStackException {
         // TODO Implement peek method
-         return null;
+        if (this.empty())
+            throw new EmptyStackException();
+        return this.top.item;
     }
 
     @Override
     public E pop() throws EmptyStackException {
         // TODO Implement pop method
-         return null;
+        if (this.empty())
+            throw new EmptyStackException();
+        this.size--;
+        E poppedItem = this.top.item;
+        this.top = this.top.next;
+        return poppedItem;
     }
 
     @Override
     public void push(E item) {
         // TODO Implement push method
+        this.size++;
+        this.top = new Node<>(item, this.top);
     }
 }
 
@@ -102,30 +116,50 @@ class ArrayStack<E> implements Stack<E> {
     private int size;        // size of the stack
 
     public ArrayStack() {
-        array = (E[]) new Object[10];
+        this.array = (E[]) new Object[10];
+        this.size = 0;
     }
 
     @Override
     public boolean empty() {
-        // TODO Implement empty method
-         return false;
+         return this.size == 0;
     }
 
     @Override
     public E peek() throws EmptyStackException {
-        // TODO Implement peek method
-         return null;
+        if (this.empty())
+            throw new EmptyStackException();
+
+        return this.array[this.size - 1] ;
     }
 
     @Override
     public E pop() throws EmptyStackException {
         // TODO Implement pop method
-         return null;
+        if (this.empty())
+            throw new EmptyStackException();
+        this.size--;
+        E poppedItem = this.array[this.size];
+        this.array[this.size] = null;
+
+        if (this.size < this.array.length / 2) {
+            E[] newArray = (E[]) new Object[this.array.length / 2];
+            System.arraycopy(this.array, 0, newArray, 0, this.size);
+            this.array = newArray;
+        }
+        return poppedItem;
     }
 
     @Override
     public void push(E item) {
         // TODO Implement push method
+        if (this.size == this.array.length) {
+            E[] newArray = (E[]) new Object[this.array.length * 2];
+            System.arraycopy(this.array, 0, newArray, 0, this.size);
+            this.array = newArray;
+        }
+        this.size++;
+        this.array[this.size - 1] = item;
     }
 
 }

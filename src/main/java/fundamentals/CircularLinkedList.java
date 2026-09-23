@@ -39,16 +39,18 @@ public class CircularLinkedList<Item> implements Iterable<Item> {
 
     public CircularLinkedList() {
         // TODO initialize instance variables
+        this.last = null;
+        this.n  = 0;
     }
 
     public boolean isEmpty() {
         // TODO
-         return false;
+         return this.n == 0;
     }
 
     public int size() {
         // TODO
-         return -1;
+         return this.n;
     }
 
     private long nOp() {
@@ -63,7 +65,18 @@ public class CircularLinkedList<Item> implements Iterable<Item> {
      */
     public void enqueue(Item item) {
         // TODO
-
+        Node newNode = new Node();
+        newNode.item = item;
+        // 1. If the list is empty
+        if (this.isEmpty()) {
+            newNode.next = newNode;
+        } else {
+            newNode.next = last.next;
+            last.next = newNode;
+        }
+        last = newNode;
+        n++;
+        nOp++;
     }
 
     /**
@@ -72,7 +85,30 @@ public class CircularLinkedList<Item> implements Iterable<Item> {
      * Returns the element that was removed from the list.
      */
     public Item remove(int index) {
-         return null;
+        // TODO
+        if (index < 0 || index >= this.size()) {
+            throw new IndexOutOfBoundsException();
+        }
+        Node prevNode = last;
+        Node currentNode = last.next;
+        for (int i = 0; i < index; i++) {
+            prevNode = currentNode;
+            currentNode = currentNode.next;
+        }
+        Item removedItem = currentNode.item;
+
+        // There was only one element in the linkedList
+        if (n == 1) {
+            this.last = null;
+        } else {
+            prevNode.next = currentNode.next;
+            if (index == this.n - 1) {
+                this.last = prevNode;
+            }
+        }
+        this.n--;
+        this.nOp++;
+        return removedItem;
     }
 
 
@@ -94,18 +130,35 @@ public class CircularLinkedList<Item> implements Iterable<Item> {
      * nOp has been modified after this iterator has been created, it throws ConcurrentModificationException.
      */
     private class ListIterator implements Iterator<Item> {
+        private Node currentNode;
+        private int i;
+        private long expectedNOp;
 
         // TODO You probably need a constructor here and some instance variables
-
+        public ListIterator() {
+            this.currentNode = (last == null) ? null : last.next;
+            this.i = 0;
+            this.expectedNOp = nOp;
+        }
 
         @Override
         public boolean hasNext() {
-             return false;
+            if (this.expectedNOp != CircularLinkedList.this.nOp)
+                throw new ConcurrentModificationException();
+            return this.i < n;
         }
 
         @Override
         public Item next() {
-             return null;
+            if (this.expectedNOp != CircularLinkedList.this.nOp)
+                throw new ConcurrentModificationException();
+            if (!this.hasNext())
+                throw new NoSuchElementException();
+
+            Item returnedItem = currentNode.item;
+            currentNode = currentNode.next;
+            i++;
+            return returnedItem;
         }
 
     }

@@ -48,7 +48,9 @@ public class FileSystem
     static class Directory implements Iterable<File> {
 
         // TODO: Add the member variables you need here
-
+        private String name;
+        private List<File> files;
+        private List<Directory> subDirectories;
 
         /**
          * Constructs a new Directory with the given name.
@@ -58,6 +60,9 @@ public class FileSystem
          */
         public Directory(String name) {
             // TODO: constructor
+            this.name = name;
+            this.files = new ArrayList<>();
+            this.subDirectories = new ArrayList<>();
         }
 
         /**
@@ -65,7 +70,7 @@ public class FileSystem
          */
         public String getName() {
             // TODO
-             return null;
+             return name;
         }
 
         /**
@@ -75,6 +80,7 @@ public class FileSystem
          */
         public void addFile(File file) {
             // TODO
+            files.add(file);
         }
 
         /**
@@ -84,6 +90,7 @@ public class FileSystem
          */
         public void addDirectory(Directory directory) {
             // TODO
+            subDirectories.add(directory);
         }
 
         /**
@@ -93,9 +100,23 @@ public class FileSystem
          */
         public int getTotalSize() {
             // TODO
-             return -1;
+            int totalSize = 0;
+            for (File file: files)
+                totalSize += file.getSize();
+
+            for (Directory dir: subDirectories)
+                totalSize += dir.getTotalSize();
+
+            return totalSize;
         }
 
+        protected List<File> getAllFiles() {
+            List<File> allFiles = new ArrayList<>(files);
+            for (Directory dir : subDirectories) {
+                allFiles.addAll(dir.getAllFiles());
+            }
+            return allFiles;
+        }
 
         /**
          * Returns an iterator over all the files in the Directory,
@@ -109,7 +130,7 @@ public class FileSystem
         @Override
         public Iterator<File> iterator() {
             // TODO
-             return null;
+             return new LazyFileIterator(this, f -> true) ;
         }
 
         /**
@@ -124,7 +145,95 @@ public class FileSystem
          */
         public Iterator<File> iterator(Predicate<File> filter) {
             // TODO
-             return null;
+             return new LazyFileIterator(this, filter);
+        }
+    }
+
+    static class FileIterator implements Iterator<File> {
+        Deque<File> fileStack;
+        Predicate<File> filter;
+
+        public FileIterator(Directory root, Predicate<File> filter) {
+            fileStack = new ArrayDeque<>();
+            this.filter = filter;
+            pushAllFiles(root);
+        }
+
+        private void pushAllFiles(Directory directory) {
+            List<File> files = directory.getAllFiles();
+            for (File file : files) {
+                if (filter == null || filter.test(file))
+                    fileStack.push(file);
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return !fileStack.isEmpty();
+        }
+
+        @Override
+        public File next() {
+            return fileStack.pop();
+        }
+    }
+
+    static class LazyFileIterator implements Iterator<File> {
+
+        private final Deque<Directory> directoryStack;
+        private final Predicate<File> filter;
+
+        private Iterator<File> currentDirectoryFiles;
+        private File nextFile;
+
+        public LazyFileIterator(Directory root, Predicate<File> filter) {
+            this.directoryStack = new ArrayDeque<>();
+            this.filter = filter;
+            this.currentDirectoryFiles = Collections.emptyIterator();
+            this.nextFile = null;
+
+            if (root != null)
+                directoryStack.push(root);
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (nextFile != null)
+                return true;
+            advance();
+            return nextFile != null;
+        }
+
+        @Override
+        public File next() {
+            if (!hasNext())
+                throw new NoSuchElementException();
+            File result = nextFile;
+            nextFile = null;
+            return result;
+        }
+
+        private void advance() {
+            while (nextFile == null) {
+                if (currentDirectoryFiles.hasNext()) {
+                    File candidate = currentDirectoryFiles.next();
+                    if (filter == null || filter.test(candidate)) {
+                        nextFile = candidate;
+                        return;
+                    }
+                    continue;
+                }
+
+                if (directoryStack.isEmpty())
+                    return;
+
+                Directory currentDir = directoryStack.pop();
+                currentDirectoryFiles = currentDir.files.iterator();
+
+                for (Directory subDir : currentDir.subDirectories) {
+                    directoryStack.push(subDir);
+                }
+            }
         }
     }
 

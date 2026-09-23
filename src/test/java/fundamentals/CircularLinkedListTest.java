@@ -63,7 +63,7 @@ public class CircularLinkedListTest {
         correct.remove(0);
         student.remove(10);
         correct.remove(10);
-        student.remove(correct.size() - 1);
+        student.remove(student.size() - 1);
         correct.remove(correct.size() - 1);
         student.enqueue(50);
         correct.add(50);

@@ -67,24 +67,47 @@ public interface SegmentedList<T> extends Iterable<T> {
 class SegmentedListImpl<T> implements SegmentedList<T> {
 
     // TODO: Implement the SegmentedList interface here
+    private int nOp;
+    private List<List<T>> segmentedList;
+    private int globalSize;
+
+    public SegmentedListImpl() {
+        this.nOp = 0;
+        this.segmentedList = new ArrayList<>();
+    }
 
 
     // Add a new segment (list) to the SegmentedList.
     public void addSegment(List<T> segment) {
+        Objects.requireNonNull(segment, "Segment cannot be null");
+        segmentedList.add(segment);
+        this.globalSize += segment.size();
+        nOp++;
     }
 
     // Remove a segment by its index.
     public void removeSegment(int index) {
+        List<T> removedSegment = segmentedList.remove(index);
+        this.globalSize -= removedSegment.size();
+        nOp++;
     }
 
     // Get the total size of the segmented list (across all segments).
     public int size() {
-         return -1;
+        return this.globalSize;
     }
 
     // Retrieve an element at a global index (spanning all segments).
     public T get(int globalIndex) {
-         return null;
+        if (globalIndex < 0 || globalIndex >= globalSize)
+            throw new IndexOutOfBoundsException();
+        int remaining = globalIndex;
+        for (List<T> segment : segmentedList) {
+            if (remaining <= segment.size())
+                return segment.get(remaining);
+            remaining -= segment.size();
+        }
+        throw new IndexOutOfBoundsException();
     }
 
 
@@ -92,7 +115,45 @@ class SegmentedListImpl<T> implements SegmentedList<T> {
     // Return an iterator for the segmented list.
     @Override
     public Iterator<T> iterator() {
-         return null;
+        return new Iterator<T>() {
+
+            private int expectedNOp = nOp;
+            private int currentElement = 0; // index of the current element
+            private int currentSegment = 0; // index of the current segment
+
+            private void checkComodification() {
+                if (expectedNOp != nOp)
+                    throw new ConcurrentModificationException();
+            }
+
+            private void advanceToNextValid() {
+                while (currentSegment < segmentedList.size()) {
+                    List<T> seg = segmentedList.get(currentSegment);
+                    if (currentElement < seg.size())
+                        return;
+                    currentSegment++;
+                    currentElement = 0;
+                }
+            }
+
+            @Override
+            public boolean hasNext() {
+                checkComodification();
+                advanceToNextValid();
+                return currentSegment < segmentedList.size();
+            }
+
+            @Override
+            public T next() {
+                checkComodification();
+                if (!hasNext())
+                    throw new NoSuchElementException();
+                T element = segmentedList.get(currentSegment).get(currentElement);
+                currentElement++;
+                return element;
+
+            }
+        };
     }
 
 
